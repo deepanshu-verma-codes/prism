@@ -99,7 +99,7 @@ async function startRecording({ streamId, sourceType = 'screen', options }) {
       microphoneStream = await getMicrophoneStream();
     }
     if (lastOptions.captureCamera) {
-      cameraStream = await getCameraStream();
+      // cameraStream = await getCameraStream();
     }
 
     await prepareVideoElements();
@@ -239,9 +239,9 @@ async function getCameraStream() {
 
 async function prepareVideoElements() {
   screenVideo.srcObject = screenStream;
-  cameraVideo.srcObject = cameraStream;
+  // cameraVideo.srcObject = cameraStream;
   await screenVideo.play();
-  if (cameraStream) await cameraVideo.play();
+  // if (cameraStream) await cameraVideo.play();
 
   const settings = screenStream.getVideoTracks()[0].getSettings();
   canvas.width = settings.width || screenVideo.videoWidth || 1920;
@@ -296,7 +296,7 @@ function drawFrame() {
   ctx.drawImage(screenVideo, 0, 0, canvas.width, canvas.height);
 
   if (cameraEnabled && cameraStream && cameraVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-    drawCameraBubble();
+    // drawCameraBubble();
   }
 
   const canvasVideoTrack = composedStream?.getVideoTracks?.()[0];
@@ -382,23 +382,9 @@ function toggleMicrophone() {
 }
 
 async function toggleCamera() {
-  const nextEnabled = !cameraEnabled;
-
-  if (nextEnabled && !cameraStream) {
-    cameraStream = await getCameraStream();
-    if (cameraStream) {
-      cameraVideo.srcObject = cameraStream;
-      await cameraVideo.play();
-    }
-  }
-
-  cameraEnabled = Boolean(nextEnabled && cameraStream);
-  cameraStream?.getVideoTracks().forEach((track) => {
-    track.enabled = cameraEnabled;
-  });
+  cameraEnabled = !cameraEnabled;
   sendState({ cameraEnabled });
 }
-
 function updateCameraPosition(position) {
   if (!position) return;
   cameraPosition = {
