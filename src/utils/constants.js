@@ -1,6 +1,7 @@
 export const MESSAGE = Object.freeze({
   START_RECORDING: 'lumina:start-recording',
   OFFSCREEN_START: 'lumina:offscreen-start',
+  OFFSCREEN_START_CAPTURE: 'lumina:offscreen-start-capture',
   OFFSCREEN_STOP: 'lumina:offscreen-stop',
   OFFSCREEN_PAUSE: 'lumina:offscreen-pause',
   OFFSCREEN_RESUME: 'lumina:offscreen-resume',
@@ -14,6 +15,7 @@ export const MESSAGE = Object.freeze({
   STATE_CHANGED: 'lumina:state-changed',
   TOOLBAR_ACTION: 'lumina:toolbar-action',
   TOOLBAR_READY: 'lumina:toolbar-ready',
+  START_COUNTDOWN: 'lumina:start-countdown',
   PREVIEW_RECORDING: 'lumina:preview-recording',
   DELETE_RECORDING: 'lumina:delete-recording',
   GET_RECENTS: 'lumina:get-recents',

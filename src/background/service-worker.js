@@ -89,9 +89,11 @@ async function startRecording(payload) {
 
   const normalizedPayload = await prepareCapturePayload(payload);
   await ensureOffscreenDocument();
+
+  // Phase 1: Prepare (Acquire streams/Share dialog)
   updateState({
     status: RECORDING_STATUS.STARTING,
-    startedAt: Date.now(),
+    startedAt: null,
     pausedAt: null,
     elapsedBeforePause: 0,
     micEnabled: Boolean(normalizedPayload.options.captureMicrophone),
@@ -100,10 +102,29 @@ async function startRecording(payload) {
     error: '',
     recordingId: null
   });
-  await sendOffscreenCommand({ type: MESSAGE.OFFSCREEN_START, payload: normalizedPayload });
-  await injectToolbarIntoTab(normalizedPayload.toolbarTabId);
-  await broadcastState();
-  return { ok: true, state };
+
+  try {
+    // This waits for the user to pick a screen/window in the Chrome dialog
+    await sendOffscreenCommand({ type: MESSAGE.OFFSCREEN_START, payload: normalizedPayload });
+
+    // Phase 2: Countdown (Only after streams are ready)
+    await injectToolbarIntoTab(normalizedPayload.toolbarTabId);
+    if (normalizedPayload.toolbarTabId) {
+      chrome.tabs.sendMessage(normalizedPayload.toolbarTabId, { type: MESSAGE.START_COUNTDOWN }).catch(() => {});
+    }
+
+    // Wait for 3 seconds countdown
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // Phase 3: Start Capture
+    await sendOffscreenCommand({ type: MESSAGE.OFFSCREEN_START_CAPTURE });
+    await broadcastState();
+    
+    return { ok: true, state };
+  } catch (error) {
+    updateState({ status: RECORDING_STATUS.IDLE, error: error.message });
+    throw error;
+  }
 }
 
 async function prepareCapturePayload(payload) {

@@ -31,6 +31,7 @@ select {
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 24px 80px rgba(15, 23, 42, 0.14);
   backdrop-filter: blur(22px);
+  max-height: 65dvh;
 }
 
 .soft-ring {
@@ -40,4 +41,19 @@ select {
 .focusable:focus-visible {
   outline: 3px solid rgba(99, 102, 241, 0.35);
   outline-offset: 2px;
+}
+
+/* Hide scrollbar for Chrome, Safari, and Opera (Blink/Webkit) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox (Gecko) */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Hide scrollbar for IE and Edge (Trident/EdgeHTML) */
+.no-scrollbar {
+  -ms-overflow-style: none;
 }

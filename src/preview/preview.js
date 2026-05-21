@@ -27,7 +27,7 @@ async function load() {
 
 function render() {
   app.innerHTML = `
-    <section class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 py-6">
+    <section class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-5 pt-6 pb-2">
       <header class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-3">
           <div class="grid h-11 w-11 place-items-center rounded-2xl bg-slate-950 text-white shadow-glow">${brandIcon()}</div>
@@ -49,12 +49,12 @@ function render() {
 
 function previewLayout() {
   return `
-    <div class="grid flex-1 gap-5 lg:grid-cols-[1fr_340px]">
-      <section class="glass-panel overflow-hidden rounded-[28px] p-3">
+    <div class="grid flex-1 gap-5 lg:grid-cols-[1fr_340px] max-h-[55vh] mb-2">
+      <section class="glass-panel overflow-hidden rounded-[28px] p-3 max-h-screen">
         <div class="overflow-hidden rounded-3xl bg-slate-950">
           <video class="aspect-video w-full bg-black" src="${videoUrl}" controls autoplay playsinline></video>
         </div>
-        <div class="flex flex-wrap items-center justify-between gap-3 p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3 p-4 pb-2">
           <div class="min-w-0">
             <h2 class="truncate text-xl font-black text-slate-950">${escapeHtml(recording.name)}</h2>
             <p class="mt-1 text-sm font-semibold text-slate-500">${formatDuration(recording.duration)} · ${formatBytes(recording.size)} · ${new Date(recording.createdAt).toLocaleString()}</p>
@@ -67,7 +67,7 @@ function previewLayout() {
         ${notice ? `<div class="mx-4 mb-4 rounded-2xl bg-emerald-100 px-4 py-3 text-sm font-bold text-emerald-800">${escapeHtml(notice)}</div>` : ''}
       </section>
 
-      <aside class="glass-panel rounded-[28px] p-4">
+      <aside class="glass-panel rounded-[28px] p-4 pb-2 max-h-[260px] overflow-y-auto no-scrollbar">
         <h3 class="text-sm font-black text-slate-950">Recent recordings</h3>
         <div class="mt-3 space-y-2">
           ${recents.length ? recents.map(recentItem).join('') : '<p class="text-sm font-semibold text-slate-500">No saved recordings.</p>'}

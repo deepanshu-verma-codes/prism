@@ -41,6 +41,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 function isOffscreenMessage(type) {
   return [
     MESSAGE.OFFSCREEN_START,
+    MESSAGE.OFFSCREEN_START_CAPTURE,
     MESSAGE.OFFSCREEN_STOP,
     MESSAGE.OFFSCREEN_PAUSE,
     MESSAGE.OFFSCREEN_RESUME,
@@ -53,7 +54,10 @@ function isOffscreenMessage(type) {
 async function handleMessage(message) {
   switch (message?.type) {
     case MESSAGE.OFFSCREEN_START:
-      await startRecording(message.payload);
+      await prepareRecording(message.payload);
+      return { ok: true };
+    case MESSAGE.OFFSCREEN_START_CAPTURE:
+      await startCapture();
       return { ok: true };
     case MESSAGE.OFFSCREEN_STOP:
       await stopRecording();
@@ -78,14 +82,14 @@ async function handleMessage(message) {
   }
 }
 
-async function startRecording({ streamId, sourceType = 'screen', options }) {
+async function prepareRecording({ streamId, sourceType = 'screen', options }) {
   if (recorder && recorder.state !== 'inactive') {
     throw new Error('A recording is already active.');
   }
 
   lastOptions = { ...DEFAULT_OPTIONS, ...options };
   chunks = [];
-  startedAt = Date.now();
+  startedAt = 0; // Don't set yet
   pausedAt = 0;
   elapsedBeforePause = 0;
   micEnabled = Boolean(lastOptions.captureMicrophone);
@@ -95,11 +99,9 @@ async function startRecording({ streamId, sourceType = 'screen', options }) {
     screenStream = sourceType === 'tab'
       ? await getTabStream(streamId, lastOptions.captureSystemAudio)
       : await getDisplayStream(sourceType, lastOptions.captureSystemAudio);
+    
     if (lastOptions.captureMicrophone) {
       microphoneStream = await getMicrophoneStream();
-    }
-    if (lastOptions.captureCamera) {
-      cameraStream = await getCameraStream();
     }
 
     await prepareVideoElements();
@@ -121,13 +123,20 @@ async function startRecording({ streamId, sourceType = 'screen', options }) {
       if (recorder && recorder.state !== 'inactive') stopRecording();
     });
 
-    recorder.start(1000);
-    startDrawingFrames();
-    sendState({ status: RECORDING_STATUS.RECORDING });
+    sendState({ status: RECORDING_STATUS.STARTING });
   } catch (error) {
     cleanup();
     throw error;
   }
+}
+
+async function startCapture() {
+  if (!recorder || recorder.state !== 'inactive') return;
+  
+  startedAt = Date.now();
+  recorder.start(1000);
+  startDrawingFrames();
+  sendState({ status: RECORDING_STATUS.RECORDING });
 }
 
 async function getDisplayStream(sourceType, includeAudio) {
@@ -221,28 +230,9 @@ async function getMicrophoneStream() {
   }
 }
 
-async function getCameraStream() {
-  try {
-    return await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        frameRate: { ideal: 30 }
-      },
-      audio: false
-    });
-  } catch {
-    cameraEnabled = false;
-    return null;
-  }
-}
-
 async function prepareVideoElements() {
   screenVideo.srcObject = screenStream;
-  cameraVideo.srcObject = cameraStream;
   await screenVideo.play();
-  if (cameraStream) await cameraVideo.play();
-
   const settings = screenStream.getVideoTracks()[0].getSettings();
   canvas.width = settings.width || screenVideo.videoWidth || 1920;
   canvas.height = settings.height || screenVideo.videoHeight || 1080;
@@ -295,53 +285,10 @@ function drawFrame() {
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(screenVideo, 0, 0, canvas.width, canvas.height);
 
-  if (cameraEnabled && cameraStream && cameraVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-    drawCameraBubble();
-  }
-
   const canvasVideoTrack = composedStream?.getVideoTracks?.()[0];
   if (canvasVideoTrack?.requestFrame) {
     canvasVideoTrack.requestFrame();
   }
-}
-
-function drawCameraBubble() {
-  const size = Math.max(160, Math.round(canvas.width * cameraPosition.size));
-  const padding = Math.round(size * 0.055);
-  const x = clamp(Math.round(canvas.width * cameraPosition.x), 0, canvas.width - size);
-  const y = clamp(Math.round(canvas.height * cameraPosition.y), 0, canvas.height - size);
-  const radius = size / 2;
-
-  ctx.save();
-  ctx.shadowColor = 'rgba(15, 23, 42, 0.38)';
-  ctx.shadowBlur = Math.round(size * 0.11);
-  ctx.shadowOffsetY = Math.round(size * 0.055);
-  ctx.beginPath();
-  ctx.arc(x + radius, y + radius, radius, 0, Math.PI * 2);
-  ctx.fillStyle = '#ffffff';
-  ctx.fill();
-  ctx.clip();
-
-  const videoRatio = cameraVideo.videoWidth / cameraVideo.videoHeight || 16 / 9;
-  let sourceWidth = cameraVideo.videoWidth;
-  let sourceHeight = cameraVideo.videoHeight;
-  if (videoRatio > 1) {
-    sourceWidth = sourceHeight;
-  } else {
-    sourceHeight = sourceWidth;
-  }
-  const sx = Math.max(0, (cameraVideo.videoWidth - sourceWidth) / 2);
-  const sy = Math.max(0, (cameraVideo.videoHeight - sourceHeight) / 2);
-  ctx.drawImage(cameraVideo, sx, sy, sourceWidth, sourceHeight, x + padding, y + padding, size - padding * 2, size - padding * 2);
-  ctx.restore();
-
-  ctx.save();
-  ctx.lineWidth = Math.max(4, Math.round(size * 0.025));
-  ctx.strokeStyle = 'rgba(255,255,255,0.88)';
-  ctx.beginPath();
-  ctx.arc(x + radius, y + radius, radius - ctx.lineWidth / 2, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.restore();
 }
 
 function pauseRecording() {
@@ -382,20 +329,7 @@ function toggleMicrophone() {
 }
 
 async function toggleCamera() {
-  const nextEnabled = !cameraEnabled;
-
-  if (nextEnabled && !cameraStream) {
-    cameraStream = await getCameraStream();
-    if (cameraStream) {
-      cameraVideo.srcObject = cameraStream;
-      await cameraVideo.play();
-    }
-  }
-
-  cameraEnabled = Boolean(nextEnabled && cameraStream);
-  cameraStream?.getVideoTracks().forEach((track) => {
-    track.enabled = cameraEnabled;
-  });
+  cameraEnabled = !cameraEnabled;
   sendState({ cameraEnabled });
 }
 
