@@ -67,7 +67,7 @@ function previewLayout() {
         ${notice ? `<div class="mx-4 mb-4 rounded-2xl bg-emerald-100 px-4 py-3 text-sm font-bold text-emerald-800">${escapeHtml(notice)}</div>` : ''}
       </section>
 
-      <aside class="glass-panel rounded-[28px] p-4 pb-2">
+      <aside class="glass-panel rounded-[28px] p-4 pb-2 max-h-[260px] overflow-y-auto no-scrollbar">
         <h3 class="text-sm font-black text-slate-950">Recent recordings</h3>
         <div class="mt-3 space-y-2">
           ${recents.length ? recents.map(recentItem).join('') : '<p class="text-sm font-semibold text-slate-500">No saved recordings.</p>'}

@@ -3,9 +3,11 @@ const ROOT_ID = 'lumina-recorder-root';
 const MESSAGE = Object.freeze({
   TOOLBAR_ACTION: 'lumina:toolbar-action',
   TOOLBAR_READY: 'lumina:toolbar-ready',
-  STATE_CHANGED: 'lumina:state-changed'
+  STATE_CHANGED: 'lumina:state-changed',
+  START_COUNTDOWN: 'lumina:start-countdown'
 });
 const RECORDING_STATUS = Object.freeze({
+  IDLE: 'idle',
   STARTING: 'starting',
   RECORDING: 'recording',
   PAUSED: 'paused',
@@ -33,7 +35,7 @@ function boot() {
   chrome.runtime.onMessage.addListener((message) => {
     if (message?.type === MESSAGE.STATE_CHANGED) {
       state = message.state;
-      if (state?.startedAt && state.startedAt !== lastStartedAt && state.status === RECORDING_STATUS.STARTING) {
+      if (state?.startedAt && state.startedAt !== lastStartedAt && state.status === RECORDING_STATUS.RECORDING) {
         stopRequested = false;
         lastStartedAt = state.startedAt;
       }
@@ -41,6 +43,9 @@ function boot() {
         stopRequested = false;
       }
       render();
+    }
+    if (message?.type === MESSAGE.START_COUNTDOWN) {
+      runCountdown();
     }
   });
   chrome.runtime.sendMessage({ type: MESSAGE.TOOLBAR_READY }, (response) => {
@@ -84,8 +89,69 @@ function render() {
   
   if (!timerInterval) timerInterval = window.setInterval(updateTimer, 500);
 }
+
+function runCountdown() {
+  const root = document.getElementById(ROOT_ID);
+  if (!root) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'lumina-countdown-overlay';
+  Object.assign(overlay.style, {
+    position: 'fixed',
+    inset: '0',
+    display: 'grid',
+    placeItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.15)',
+    zIndex: '2147483647',
+    pointerEvents: 'none',
+    transition: 'opacity 0.3s ease'
+  });
+
+  const text = document.createElement('div');
+  Object.assign(text.style, {
+    fontSize: '140px',
+    fontWeight: '900',
+    color: '#fff',
+    textShadow: '0 10px 40px rgba(0,0,0,0.4)',
+    fontFamily: 'Inter, system-ui, sans-serif',
+    animation: 'luminaPulse 1s ease-in-out infinite'
+  });
+
+  const style = document.createElement('style');
+  style.id = 'lumina-countdown-style';
+  style.textContent = `
+    @keyframes luminaPulse {
+      0% { transform: scale(0.7); opacity: 0.4; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.7); opacity: 0.4; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  overlay.appendChild(text);
+  root.appendChild(overlay);
+
+  let count = 3;
+  text.textContent = count;
+
+  const interval = setInterval(() => {
+    count--;
+    if (count > 0) {
+      text.textContent = count;
+    } else {
+      clearInterval(interval);
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        overlay.remove();
+        const s = document.getElementById('lumina-countdown-style');
+        if (s) s.remove();
+      }, 300);
+    }
+  }, 1000);
+}
+
 function ensureBaseStructure(root) {
-  if (root.querySelector('style')) return;
+  if (root.querySelector('.lumina-shell')) return;
 
   const shellHtml = `<div class="lumina-shell" id="lumina-shell">
       <div class="lumina-grip" title="Drag toolbar" aria-label="Drag toolbar">
@@ -104,7 +170,7 @@ function ensureBaseStructure(root) {
       <div class="lumina-camera-ring"></div>
     </div>`;
 
-  root.innerHTML = `<style>${styles()}</style>${shellHtml}${cameraHtml}`;
+  root.innerHTML += `<style>${styles()}</style>${shellHtml}${cameraHtml}`;
   bindToolbar(root);
 }
 function updateToolbar() {
@@ -116,7 +182,10 @@ function updateToolbar() {
 
   const liveText = document.querySelector('#lumina-live span');
   if (liveText) {
-    const expectedText = state.status === RECORDING_STATUS.PAUSED ? 'Paused' : 'Recording';
+    let expectedText = 'Recording';
+    if (state.status === RECORDING_STATUS.PAUSED) expectedText = 'Paused';
+    if (state.status === RECORDING_STATUS.STARTING) expectedText = 'Starting...';
+    
     if (liveText.textContent !== expectedText) {
       liveText.textContent = expectedText;
     }
@@ -233,7 +302,18 @@ function makeDraggable(element, { onMove, useLeftTop = false }) {
 
 function updateTimer() {
   const timer = document.querySelector(`#${ROOT_ID} [data-timer]`);
-  if (!timer || !state?.startedAt) return;
+  if (!timer) return;
+  
+  if (state?.status !== RECORDING_STATUS.RECORDING && state?.status !== RECORDING_STATUS.PAUSED) {
+    timer.textContent = '00:00';
+    return;
+  }
+  
+  if (!state?.startedAt) {
+    timer.textContent = '00:00';
+    return;
+  }
+  
   const pausedDelta = state.pausedAt ? Date.now() - state.pausedAt : 0;
   const elapsed = Date.now() - state.startedAt - (state.elapsedBeforePause || 0) - pausedDelta;
   timer.textContent = formatDuration(elapsed);
