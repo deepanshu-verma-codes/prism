@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Prism Recorder logo">
+  <defs>
+    <linearGradient id="prism-bg" x1="18" y1="16" x2="112" y2="116" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#101827"/>
+      <stop offset="0.46" stop-color="#243B86"/>
+      <stop offset="1" stop-color="#10B981"/>
+    </linearGradient>
+    <linearGradient id="prism-lens" x1="38" y1="32" x2="91" y2="91" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#B7FFF0"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="30" fill="url(#prism-bg)"/>
+  <path d="M26 40c0-7.7 6.3-14 14-14h34c7.7 0 14 6.3 14 14v10l18-10.2c4.7-2.7 10.5.7 10.5 6.1v36.2c0 5.4-5.8 8.8-10.5 6.1L88 78v10c0 7.7-6.3 14-14 14H40c-7.7 0-14-6.3-14-14V40Z" fill="url(#prism-lens)" opacity=".96"/>
+  <rect x="39" y="40" width="36" height="48" rx="10" fill="#111827" opacity=".9"/>
+  <circle cx="57" cy="64" r="13" fill="#F43F5E"/>
+  <circle cx="57" cy="64" r="6" fill="#FFF7ED"/>
+  <path d="M91 56v16l13 7.4V48.6L91 56Z" fill="#111827" opacity=".9"/>
+</svg>

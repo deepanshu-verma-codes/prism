@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "Prism Recorder",
+  "description": "A modern Loom-style screen recorder with camera overlay, microphone, system audio, floating controls, and local previews.",
+  "version": "1.0.0",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "storage",
+    "tabs",
+    "activeTab",
+    "scripting",
+    "desktopCapture",
+    "offscreen",
+    "tabCapture"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "assets/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Prism Recorder",
+    "default_popup": "popup/index.html",
+    "default_icon": {
+      "16": "icons/prism.svg",
+      "32": "icons/prism.svg",
+      "48": "icons/prism.svg",
+      "128": "icons/prism.svg"
+    }
+  },
+  "icons": {
+    "16": "icons/prism.svg",
+    "32": "icons/prism.svg",
+    "48": "icons/prism.svg",
+    "128": "icons/prism.svg"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["assets/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "assets/*",
+        "camera/index.html",
+        "preview/index.html",
+        "offscreen/index.html"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
