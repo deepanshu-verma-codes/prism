@@ -46,7 +46,7 @@ vite.config.js
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/deepanshu-verma-codes/prism.git
-    cd lumina-v3
+    cd prism
     ```
 
 2.  **Install dependencies:**
