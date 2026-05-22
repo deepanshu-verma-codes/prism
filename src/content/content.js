@@ -162,6 +162,7 @@ function ensureBaseStructure(root) {
       <button class="lumina-btn" data-action="pause" id="lumina-pause-btn"></button>
       <button class="lumina-btn" data-action="toggleMic" id="lumina-mic-btn"></button>
       <button class="lumina-btn" data-action="toggleCamera" id="lumina-camera-btn"></button>
+      <button class="lumina-btn lumina-cancel" data-action="cancel" title="Cancel recording">${trashIcon()}</button>
       <button class="lumina-stop" data-action="stop" title="Stop recording">${stopIcon()}</button>
     </div>`;
 
@@ -250,7 +251,7 @@ function bindToolbar(root) {
   root.querySelectorAll('[data-action]').forEach((button) => {
     button.addEventListener('click', () => {
       const action = button.dataset.action;
-      if (action === 'stop') { clearToolbarImmediately(); }
+      if (action === 'stop' || action === 'cancel') { clearToolbarImmediately(); }
       chrome.runtime.sendMessage({ type: MESSAGE.TOOLBAR_ACTION, action });
     });
   });
@@ -327,6 +328,7 @@ function styles() {
     .lumina-live{display:flex;align-items:center;gap:7px;padding:0 6px 0 2px;font:600 12px/1 Inter,system-ui;letter-spacing:0;color:#f9fafb}.lumina-live i{width:8px;height:8px;border-radius:50%;background:#f43f5e;box-shadow:0 0 0 5px rgba(244,63,94,.16)}
     .lumina-timer{min-width:52px;padding:8px 10px;border-radius:999px;background:rgba(255,255,255,.12);font:700 13px/1 Inter,system-ui;text-align:center;font-variant-numeric:tabular-nums}
     .lumina-btn,.lumina-stop{display:grid;place-items:center;width:34px;height:34px;border:0;border-radius:999px;color:#fff;background:rgba(255,255,255,.12);cursor:pointer;transition:transform .16s ease,background .16s ease}.lumina-btn:hover{background:rgba(255,255,255,.2);transform:translateY(-1px)}.lumina-btn.is-off{color:#cbd5e1;background:rgba(148,163,184,.16)}.lumina-stop{background:linear-gradient(135deg,#fb7185,#ef4444);box-shadow:0 8px 24px rgba(239,68,68,.35)}.lumina-stop:hover{transform:translateY(-1px) scale(1.03)}
+    .lumina-btn.lumina-cancel:hover{background:rgba(239,68,68,.2);color:#fb7185}
     .lumina-btn svg,.lumina-stop svg{width:17px;height:17px;display:block}
     .lumina-camera{position:absolute;overflow:hidden;border-radius:999px;background:linear-gradient(135deg,#111827,#312e81);box-shadow:0 18px 54px rgba(15,23,42,.28);pointer-events:auto;cursor:grab;animation:luminaBubbleIn .2s ease-out}.lumina-camera-placeholder{display:grid;place-items:center;width:100%;height:100%;color:rgba(255,255,255,.92)}.lumina-camera-placeholder svg{width:100%;height:100%}.lumina-camera-frame{display:block;width:100%;height:100%;border:0;background:#111827;pointer-events:none}.lumina-camera-ring{position:absolute;inset:0;border:3px solid rgba(255,255,255,.88);border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(17,24,39,.12);pointer-events:none}
     @keyframes luminaIn{from{opacity:0;transform:translate(${toolbar.x}px, ${toolbar.y + 8}px) scale(.98)}to{opacity:1;transform:translate(${toolbar.x}px, ${toolbar.y}px) scale(1)}}@keyframes luminaBubbleIn{from{opacity:0;transform:translateY(8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -359,6 +361,7 @@ function clearToolbarImmediately() {
 function pauseIcon() { return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5h3v14H8V5Zm5 0h3v14h-3V5Z"/></svg>'; }
 function playIcon() { return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7L8 5Z"/></svg>'; }
 function stopIcon() { return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 7h10v10H7V7Z"/></svg>'; }
+function trashIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>'; }
 function micIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>'; }
 function micOffIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V5a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><line x1="12" y1="19" x2="12" y2="22"/></svg>'; }
 function cameraIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 13 5 3V8l-5 3v2Z"/><rect x="3" y="6" width="13" height="12" rx="2"/></svg>'; }

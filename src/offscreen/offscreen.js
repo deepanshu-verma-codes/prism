@@ -43,6 +43,7 @@ function isOffscreenMessage(type) {
     MESSAGE.OFFSCREEN_START,
     MESSAGE.OFFSCREEN_START_CAPTURE,
     MESSAGE.OFFSCREEN_STOP,
+    MESSAGE.OFFSCREEN_CANCEL,
     MESSAGE.OFFSCREEN_PAUSE,
     MESSAGE.OFFSCREEN_RESUME,
     MESSAGE.OFFSCREEN_TOGGLE_MIC,
@@ -61,6 +62,9 @@ async function handleMessage(message) {
       return { ok: true };
     case MESSAGE.OFFSCREEN_STOP:
       await stopRecording();
+      return { ok: true };
+    case MESSAGE.OFFSCREEN_CANCEL:
+      await cancelRecording();
       return { ok: true };
     case MESSAGE.OFFSCREEN_PAUSE:
       pauseRecording();
@@ -318,6 +322,15 @@ async function stopRecording() {
     recorder.requestData();
     recorder.stop();
   });
+}
+
+async function cancelRecording() {
+  if (recorder && recorder.state !== 'inactive') {
+    recorder.onstop = null;
+    recorder.stop();
+  }
+  cleanup();
+  sendState({ status: RECORDING_STATUS.IDLE });
 }
 
 function toggleMicrophone() {
