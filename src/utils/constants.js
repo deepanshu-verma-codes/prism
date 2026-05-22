@@ -3,6 +3,7 @@ export const MESSAGE = Object.freeze({
   OFFSCREEN_START: 'lumina:offscreen-start',
   OFFSCREEN_START_CAPTURE: 'lumina:offscreen-start-capture',
   OFFSCREEN_STOP: 'lumina:offscreen-stop',
+  OFFSCREEN_CANCEL: 'lumina:offscreen-cancel',
   OFFSCREEN_PAUSE: 'lumina:offscreen-pause',
   OFFSCREEN_RESUME: 'lumina:offscreen-resume',
   OFFSCREEN_TOGGLE_MIC: 'lumina:offscreen-toggle-mic',

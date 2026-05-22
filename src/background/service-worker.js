@@ -173,6 +173,11 @@ async function handleToolbarAction(action, payload = {}) {
     await broadcastState();
     await sendOffscreenCommand({ type: MESSAGE.OFFSCREEN_STOP });
   }
+  if (action === 'cancel') {
+    updateState({ status: RECORDING_STATUS.IDLE });
+    await broadcastState();
+    await sendOffscreenCommand({ type: MESSAGE.OFFSCREEN_CANCEL });
+  }
   if (action === 'toggleMic') {
     await sendOffscreenCommand({ type: MESSAGE.OFFSCREEN_TOGGLE_MIC });
   }
